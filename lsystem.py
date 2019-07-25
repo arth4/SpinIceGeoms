@@ -1,6 +1,7 @@
 import turtle
 import random
 import numpy as np
+import itertools
 
 SYSTEM_RULES = {}  # generator system rules for l-system
 EAST,NORTH,WEST,SOUTH = 0,90,180,270
@@ -98,13 +99,17 @@ def draw_rect(turtle,h,w):
     RN+=1;print(RN)
 
 #    turtle.right(angle)
-def draw_l_system(turtle, SYSTEM_RULES, seg_length, angle,magH=20,magW=10,magAngleDelta=90,magInit=0):
+def draw_l_system(turtle, SYSTEM_RULES, seg_length, angle,magH=20,magW=10,magAngleDelta=[90],magInit=0,skipMag=None):
     stack = []
     magAngle=magInit
+    skipMag = itertools.cycle(skipMag)
+    magAngleDelta = itertools.cycle(magAngleDelta)
     for command in SYSTEM_RULES:
         #angle = random.random()*360
         turtle.pd()
-        if command in ["F", "G", "R", "L"]:
+        if command in ["G", "R", "L"]: #"F"
+            draw_rect(turtle,magH,magW)
+            turtle.pu()
             turtle.forward(seg_length)
             
         elif command in ["u","d","l","r"]:
@@ -119,11 +124,15 @@ def draw_l_system(turtle, SYSTEM_RULES, seg_length, angle,magH=20,magW=10,magAng
         elif command in ["M","m"]:
             draw_rect(turtle,magH,magW)
             
-        elif command == "X":
-            uncoupledDrawForward(turtle,magH,magW,seg_length,magAngle)
+        elif command == "F" or command=="X":
+            if(next(skipMag)):
+                turtle.pu()
+                turtle.forward(seg_length)
+            else:
+                uncoupledDrawForward(turtle,magH,magW,seg_length,magAngle)
 #            draw_rect(turtle,magH,magW)
 #            turtle.pu()  # pen up - not drawing
-#            turtle.forward(seg_length)
+#                turtle.forward(seg_length)
         
         elif command == "f":
             turtle.pu()  # pen up - not drawing
@@ -132,11 +141,10 @@ def draw_l_system(turtle, SYSTEM_RULES, seg_length, angle,magH=20,magW=10,magAng
             
         elif command == "+":
             turtle.right(angle)
-            magAngle= (magAngle+ magAngleDelta)%180 
+            magAngle= (magAngle- next(magAngleDelta))%360 
         elif command == "-":
             turtle.left(angle)
-            magAngle= (magAngle- magAngleDelta)%180 
-            
+            magAngle= (magAngle+ next(magAngleDelta))%360 
             
         elif command == "[":
             stack.append((turtle.position(), turtle.heading()))
